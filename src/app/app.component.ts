@@ -19,6 +19,7 @@ export type Microfrontend = LoadRemoteModuleOptions & {
 export class AppComponent implements OnInit {
 
     remoteModuleOptions: LoadRemoteModuleOptions;
+    hostObject: any = {}
 
     constructor(
         private httpService: PepHttpService,
@@ -37,7 +38,7 @@ export class AppComponent implements OnInit {
 
         if (pbAddon) {
             const pageKey = this.route.snapshot.queryParamMap.get('page_key') || '';
-            console.log('pageKey', pageKey);
+            this.hostObject = { pageKey: pageKey };
             const moduleName = 'PageBuilderModule';
             const fileName = 'addon';
 
