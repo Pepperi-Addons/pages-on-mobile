@@ -1,9 +1,10 @@
 import { NgModule } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-import { PepNgxLibModule } from '@pepperi-addons/ngx-lib';
+import { PepAddonService, PepFileService, PepNgxLibModule } from '@pepperi-addons/ngx-lib';
+import { PepButtonModule } from '@pepperi-addons/ngx-lib/button'
 import { PepAddonLoaderModule } from '@pepperi-addons/ngx-remote-loader';
 
 import { AppRoutingModule } from './app.routes';
@@ -19,7 +20,8 @@ import { AppComponent } from './app.component';
         HttpClientModule,
         AppRoutingModule,
         PepNgxLibModule,
-        PepAddonLoaderModule
+        PepAddonLoaderModule,
+        PepButtonModule,
     ],
     providers: [],
     bootstrap: [AppComponent]
