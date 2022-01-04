@@ -1,15 +1,5 @@
-import { Component, EventEmitter, NgZone, OnInit } from '@angular/core';
-import { Router, ActivatedRoute, Routes, NavigationEnd } from '@angular/router';
-import { PepHttpService, PepUtilitiesService, PepAddonService, PepEncodePipe } from '@pepperi-addons/ngx-lib';
-import { routes } from './app.routes';
-
-import { loadRemoteModule, LoadRemoteModuleOptions } from '@angular-architects/module-federation';
-
-export type Microfrontend = LoadRemoteModuleOptions & {
-    routePath: string;
-    routeData?: any;
-    ngModuleName: string;
-}
+import { Component, OnInit } from '@angular/core';
+import { PepHttpService, PepAddonService } from '@pepperi-addons/ngx-lib';
 
 @Component({
     selector: 'addon-root',
@@ -18,17 +8,14 @@ export type Microfrontend = LoadRemoteModuleOptions & {
 })
 export class AppComponent implements OnInit {
 
-    remoteModuleOptions: LoadRemoteModuleOptions;
+    remoteModuleOptions: any;
     hostObject: any = {}
     params: any
     callbackMap: { [key: string]: (res: any) => void } = {}
 
     constructor(
         private httpService: PepHttpService,
-        private addonService: PepAddonService,
-        private route: ActivatedRoute,
-        private _router: Router,
-        private zone: NgZone
+        private addonService: PepAddonService
     ) {
          window['nativeBridgeCallback'] = (res) => {
             const callbackKey = res.callbackKey;
@@ -79,31 +66,28 @@ export class AppComponent implements OnInit {
         }, false)
         await this.setAccessToken();
         const pageKey = await this.nativeBridge('getPageKey');
+        console.log("Page Key = ", pageKey);
 
         const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41';
         const pbAddon: any = await this.getAddon(pageBuilderUUID);
         if (pbAddon) {
-            this.route.queryParams.subscribe(params=> {
-                this.hostObject = { pageKey: pageKey };
-                const moduleName = 'PageBuilderModule';
-                const fileName = 'addon';
-                this.addonService.setAddonStaticFolder(pbAddon.PublicBaseURL);
-                this.remoteModuleOptions ={
-
-                    // key: '',
-        
-                    addonId: pageBuilderUUID,
-        
-                    remoteEntry: `${pbAddon.PublicBaseURL}${fileName}.js`,
-        
-                    remoteName: fileName,
-        
-                    exposedModule: `./${moduleName}`,
-        
-                    componentName: 'PageBuilderComponent',
-        
-                } as any
-            })
+            this.hostObject = { pageKey: pageKey };
+            const moduleName = 'PageBuilderModule';
+            const fileName = 'addon';
+            this.addonService.setAddonStaticFolder(pbAddon.PublicBaseURL);
+            this.remoteModuleOptions = {
+    
+                addonId: pageBuilderUUID,
+    
+                remoteEntry: `${pbAddon.PublicBaseURL}${fileName}.js`,
+    
+                remoteName: fileName,
+    
+                exposedModule: `./${moduleName}`,
+    
+                componentName: 'PageBuilderComponent',
+    
+            }
         }
     }
 
