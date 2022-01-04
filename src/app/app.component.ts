@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { PepHttpService, PepAddonService } from '@pepperi-addons/ngx-lib';
+import { PepHttpService, PepAddonService, PepCustomizationService } from '@pepperi-addons/ngx-lib';
 
 @Component({
     selector: 'addon-root',
@@ -15,7 +15,8 @@ export class AppComponent implements OnInit {
 
     constructor(
         private httpService: PepHttpService,
-        private addonService: PepAddonService
+        private addonService: PepAddonService,
+        private customizationService: PepCustomizationService
     ) {
          window['nativeBridgeCallback'] = (res) => {
             const callbackKey = res.callbackKey;
@@ -60,14 +61,25 @@ export class AppComponent implements OnInit {
         },timeToUpdate);
     }
 
+    private async getTheme() {
+        return await this.httpService.getPapiApiCall(`/addons/api/95501678-6687-4fb3-92ab-1155f47f839e/themes/css_variables`).toPromise();
+    }
+
+    async setTheme() {
+        const themeVars = await this.getTheme();
+        this.customizationService.setThemeVariables(themeVars.resultObject);
+    }
+
     async initPage() {
         window.addEventListener('emit-event', (e: CustomEvent) => {
             console.log(e.detail);
         }, false)
         await this.setAccessToken();
+        
         const pageKey = await this.nativeBridge('getPageKey');
         console.log("Page Key = ", pageKey);
 
+        await this.setTheme();
         const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41';
         const pbAddon: any = await this.getAddon(pageBuilderUUID);
         if (pbAddon) {
