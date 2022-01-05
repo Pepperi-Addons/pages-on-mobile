@@ -1,2 +1,20 @@
-<pep-remote-loader [options]="remoteModuleOptions" 
-                [hostObject]="hostObject" ></pep-remote-loader>
+<div>
+    <div id="loadingSpinnerModal" [hidden]="!showLoader" pepRtlClass>
+        <div id="loadingSpinner">
+            <div class="pep-loading-spinner" *ngFor="let number of [0, 1, 2, 3, 4]"
+                [ngStyle]="{ 'background-color': customizationService?.getLoadingSpinnerColor() }"></div>
+        </div>
+    </div>
+    <div *ngIf="!loadingError">
+        <pep-remote-loader [options]="remoteModuleOptions" [hostObject]="hostObject" ></pep-remote-loader>
+    </div>
+    <div *ngIf="loadingError">
+        <div class="content-unavailable-container" >
+            <div class="content-unavailable" (click)="checkOnline()">
+                <img src="assets/alert.svg" alt="Alert icon" />
+                <h1>Content Unavailable</h1>
+                <h2>Tap to Reload</h2>
+            </div>
+        </div>
+    </div>
+</div>
