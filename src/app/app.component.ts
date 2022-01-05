@@ -88,13 +88,26 @@ export class AppComponent implements OnInit, OnDestroy {
         }, timeToUpdate);
     }
 
+    private async getTheme() {
+        return await this.httpService.getPapiApiCall(`/addons/api/95501678-6687-4fb3-92ab-1155f47f839e/themes/css_variables`).toPromise();
+    }
+
+    async setTheme() {
+        const themeVars = await this.getTheme();
+        this.customizationService.setThemeVariables(themeVars.resultObject);
+    }
+
     async initPage() {
         window.addEventListener('emit-event', (e: CustomEvent) => {
             console.log(e.detail);
         }, false)
+        
         await this.setAccessToken();
+        
         const pageKey = await this.nativeBridge('getPageKey');
-
+        
+        await this.setTheme();
+        
         const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41';
         const pbAddon: any = await this.getAddon(pageBuilderUUID);
         if (pbAddon) {
