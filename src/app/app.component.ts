@@ -105,13 +105,17 @@ export class AppComponent implements OnInit, OnDestroy {
         await this.setAccessToken();
         
         const pageKey = await this.nativeBridge('getPageKey');
+        const pageParams = JSON.parse(await this.nativeBridge('getPageParams'));
         
         await this.setTheme();
         
         const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41';
         const pbAddon: any = await this.getAddon(pageBuilderUUID);
         if (pbAddon) {
-            this.hostObject = { pageKey: pageKey };
+            this.hostObject = { 
+                pageKey: pageKey,
+                pageParams: pageParams,
+            };
             const moduleName = 'PageBuilderModule';
             const fileName = 'addon';
             this.addonService.setAddonStaticFolder(pbAddon.PublicBaseURL);
