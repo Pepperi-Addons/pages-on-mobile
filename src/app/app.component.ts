@@ -98,8 +98,8 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     async initPage() {
-        window.addEventListener('emit-event', (e: CustomEvent) => {
-            console.log(e.detail);
+        window.addEventListener('emit-event', async (e: CustomEvent) => {
+            await this.nativeBridge('emit-event', e.detail);
         }, false)
         
         await this.setAccessToken();
