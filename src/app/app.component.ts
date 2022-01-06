@@ -1,31 +1,53 @@
-import { Component, OnInit } from '@angular/core';
-import { PepHttpService, PepAddonService, PepCustomizationService } from '@pepperi-addons/ngx-lib';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { PepHttpService, PepAddonService, PepCustomizationService, PepLoaderService } from '@pepperi-addons/ngx-lib';
 
 @Component({
     selector: 'addon-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
     remoteModuleOptions: any;
     hostObject: any = {}
     params: any
     callbackMap: { [key: string]: (res: any) => void } = {}
+    showLoader = false;
+    loadingError: boolean = false;
+    accessTokenTimeout: number = 0;
 
     constructor(
         private httpService: PepHttpService,
         private addonService: PepAddonService,
-        private customizationService: PepCustomizationService
+        private customizationService: PepCustomizationService,
+        private loaderService: PepLoaderService
     ) {
-         window['nativeBridgeCallback'] = (res) => {
+        this.loaderService.onChanged$.subscribe((show) => {
+            this.showLoader = show;
+        });
+        
+        window['nativeBridgeCallback'] = (res) => {
             const callbackKey = res.callbackKey;
             const callback = this.callbackMap[callbackKey]
             if (callback) {
                 callback(res.data);
                 this.callbackMap[callbackKey] = undefined;
             }
-         }
+        }
+    }
+
+    async checkOnline() {
+        try {
+            this.loaderService.show();
+            await this.initPage();
+            this.loaderService.hide();
+            this.loadingError = false;
+        }
+        catch (err) {
+            this.loaderService.hide();
+            this.loadingError = true;
+            console.log(err);
+        }
     }
 
     private async getAddon(addonUUID): Promise<any> {
@@ -49,16 +71,21 @@ export class AppComponent implements OnInit {
     }
 
     async setAccessToken() {
+        // cancel any exiting timeouts
+        clearTimeout(this.accessTokenTimeout);
+
+        // get the access token from the bridge
         const accessToken = await this.nativeBridge('getAccessToken');
         window.sessionStorage.setItem('idp_token',accessToken)
 
-        //update accessToken when it expires 
+        // update accessToken when it expires 
         const decodedJWT= await JSON.parse(atob(accessToken.split('.')[1]));
         let timeToUpdate = (decodedJWT.exp * 1000) - Date.now()
-        setTimeout(() => {
+
+        this.accessTokenTimeout = setTimeout(async () => {
             console.log('updating access token')
-             this.setAccessToken();
-        },timeToUpdate);
+            await this.setAccessToken();
+        }, timeToUpdate);
     }
 
     private async getTheme() {
@@ -74,12 +101,13 @@ export class AppComponent implements OnInit {
         window.addEventListener('emit-event', (e: CustomEvent) => {
             console.log(e.detail);
         }, false)
+        
         await this.setAccessToken();
         
         const pageKey = await this.nativeBridge('getPageKey');
-        console.log("Page Key = ", pageKey);
-
+        
         await this.setTheme();
+        
         const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41';
         const pbAddon: any = await this.getAddon(pageBuilderUUID);
         if (pbAddon) {
@@ -104,6 +132,10 @@ export class AppComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.initPage()
+        this.checkOnline();
+    }
+
+    ngOnDestroy() {
+        clearTimeout(this.accessTokenTimeout);
     }
 }
