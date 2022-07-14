@@ -121,7 +121,7 @@ export class AppComponent implements OnInit, OnDestroy {
         
         //offline
         const fileName =  'page_builder'; 
-        const publicBaseURL = "http://localhost:8088/files/Pages/Addon/Public/50062e0c-9967-4ed4-9102-f2bc50602d41/";
+        const publicBaseURL = `http://localhost:8088/files/Pages/Addon/Public/${pageBuilderUUID}/`;
         
         this.addonService.setAddonStaticFolder(publicBaseURL);
 
