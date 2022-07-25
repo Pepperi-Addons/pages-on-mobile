@@ -117,7 +117,7 @@ export class AppComponent implements OnInit, OnDestroy {
                 pageParams: pageParams,
             };
             const moduleName = 'PageBuilderModule';
-            const fileName = 'addon';
+            const fileName = 'page_builder';
             this.addonService.setAddonStaticFolder(pbAddon.PublicBaseURL);
             this.remoteModuleOptions = {
     
