@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PepHttpService, PepAddonService, PepCustomizationService, PepLoaderService } from '@pepperi-addons/ngx-lib';
-
+import { IBlockLoaderData, PepRemoteLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 @Component({
     selector: 'addon-root',
     templateUrl: './app.component.html',
@@ -16,16 +16,23 @@ export class AppComponent implements OnInit, OnDestroy {
     loadingError: boolean = false;
     accessTokenTimeout: number = 0;
 
+    onHostEventsCallback: (event: CustomEvent) => void;
+
     constructor(
         private httpService: PepHttpService,
         private addonService: PepAddonService,
         private customizationService: PepCustomizationService,
-        private loaderService: PepLoaderService
+        private loaderService: PepLoaderService,
+        private remoteLoaderService: PepRemoteLoaderService
     ) {
         this.loaderService.onChanged$.subscribe((show) => {
             this.showLoader = show;
         });
         
+        this.onHostEventsCallback = (event: CustomEvent) => {
+            this.onHostEvents(event.detail);
+        }
+
         window['nativeBridgeCallback'] = (res) => {
             const callbackKey = res.callbackKey;
             const callback = this.callbackMap[callbackKey]
@@ -34,6 +41,17 @@ export class AppComponent implements OnInit, OnDestroy {
                 this.callbackMap[callbackKey] = undefined;
             }
         }
+    }
+    
+    onHostEvents(event) {
+        // TODO:
+        // debugger;
+    }
+
+    onElementLoad(event) {
+        // TODO:
+        // debugger;
+
     }
 
     async checkOnline() {
@@ -110,36 +128,37 @@ export class AppComponent implements OnInit, OnDestroy {
         const pageParams = JSON.parse(await this.nativeBridge('getPageParams'));
         
         await this.setTheme();
-        const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41';
         
         this.hostObject = { 
             pageKey: pageKey,
             pageParams: pageParams,
             offline: true,
         };
-        const moduleName = 'PageBuilderModule';
+        // const moduleName = 'PageBuilderModule';
         
         //offline
-        const fileName =  'page_builder'; 
+        // const fileName =  'page_builder'; 
+        const pagesRelation = null; // TODO: Get the Addon block pages relation. (Name = 'Pages', RelationName = "AddonBlock")
+        const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41'; // TODO: Get the pages addon uuid from the relation.
         const publicBaseURL = `http://localhost:8088/files/Pages/Addon/Public/${pageBuilderUUID}/`;
+
+        // this.addonService.setAddonStaticFolder(publicBaseURL);
         
-        this.addonService.setAddonStaticFolder(publicBaseURL);
+        const pagesLoaderData: IBlockLoaderData = {
+            addon: null,
+            addonPublicBaseURL: publicBaseURL,
+            relation: pagesRelation
+        };
+        this.remoteModuleOptions = this.remoteLoaderService.getRemoteLoaderOptions(pagesLoaderData)
 
-
-        this.remoteModuleOptions = {
-
-            addonId: pageBuilderUUID,
-
-            remoteEntry: `${publicBaseURL}${fileName}.js`,
-
-            remoteName: fileName,
-
-            exposedModule: `./${moduleName}`,
-
-            componentName: 'PageBuilderComponent',
-
-        }
-        
+        // Old code removed in upgrade to NG14.
+        // this.remoteModuleOptions = {
+        //     addonId: pageBuilderUUID,
+        //     remoteEntry: `${publicBaseURL}${fileName}.js`,
+        //     remoteName: fileName,
+        //     exposedModule: `./${moduleName}`,
+        //     componentName: 'PageBuilderComponent',
+        // }
     }
 
     ngOnInit() {

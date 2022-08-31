@@ -6,7 +6,14 @@
         </div>
     </div>
     <div *ngIf="!loadingError">
-        <pep-remote-loader [options]="remoteModuleOptions" [hostObject]="hostObject" ></pep-remote-loader>
+        <!-- <pep-remote-loader [options]="remoteModuleOptions" [hostObject]="hostObject" ></pep-remote-loader> -->
+
+        <pep-remote-loader-element *ngIf="remoteModuleOptions"
+            [options]="remoteModuleOptions" 
+            [props]="{ hostObject: hostObject }"
+            [events]="{ hostEvents: onHostEventsCallback }"
+            (load)="onElementLoad($event)">
+        </pep-remote-loader-element>
     </div>
     <div *ngIf="loadingError">
         <div class="content-unavailable-container" >
