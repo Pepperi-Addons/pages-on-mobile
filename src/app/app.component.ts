@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PepHttpService, PepAddonService, PepCustomizationService, PepLoaderService } from '@pepperi-addons/ngx-lib';
 import { IBlockLoaderData, PepRemoteLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
+import { Relation } from '@pepperi-addons/papi-sdk';
 @Component({
     selector: 'addon-root',
     templateUrl: './app.component.html',
@@ -137,9 +138,28 @@ export class AppComponent implements OnInit, OnDestroy {
         // const moduleName = 'PageBuilderModule';
         
         //offline
-        // const fileName =  'page_builder'; 
-        const pagesRelation = null; // TODO: Get the Addon block pages relation. (Name = 'Pages', RelationName = "AddonBlock")
+        
+        // TODO: 
+        // const pagesRelation = Get the Addon block pages relation. (Name = 'Pages', RelationName = "AddonBlock")
+        const fileName =  'page_builder'; 
+        const name = 'Pages';
+        const blockName = 'PageBuilder';
         const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41'; // TODO: Get the pages addon uuid from the relation.
+
+        const pagesRelation: Relation = {
+            RelationName: "AddonBlock",
+            Name: name,
+            Description: `${name} addon block`,
+            Type: "NgComponent",
+            SubType: "NG14",
+            AddonUUID: pageBuilderUUID,
+            AddonRelativeURL: fileName,
+            ComponentName: `${blockName}Component`,
+            ModuleName: `${blockName}Module`,
+            ElementsModule: 'WebComponents',
+            ElementName: `pages-element-${pageBuilderUUID}`,
+        }; 
+
         const publicBaseURL = `http://localhost:8088/files/Pages/Addon/Public/${pageBuilderUUID}/`;
 
         // this.addonService.setAddonStaticFolder(publicBaseURL);
