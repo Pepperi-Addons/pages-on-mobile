@@ -1,15 +1,25 @@
 const { shareAll, share, withModuleFederationPlugin } = require('@angular-architects/module-federation/webpack');
 const filename = 'addon';
 
-module.exports = withModuleFederationPlugin({
+const webpackConfig = withModuleFederationPlugin({
+    name: filename,
+    filename: `${filename}.js`,
+    exposes: {
+        './WebComponents': './src/bootstrap.ts',
+    },
+    shared: {
+        ...shareAll({ strictVersion: true, requiredVersion: 'auto' }),
+    }
+});
+
+module.exports = {
+    ...webpackConfig,
     output: {
+        ...webpackConfig.output,
         uniqueName: filename,
         publicPath: "http://localhost:4400/",
     },
-    shared: {
-        ...shareAll({ eager: true, strictVersion: true, requiredVersion: 'auto' }),
-    },
-});
+};
 
 // const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
 // const mf = require("@angular-architects/module-federation/webpack");
