@@ -121,7 +121,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
     async initPage() {
         window.addEventListener('emit-event', async (e: CustomEvent) => {
-            await this.nativeBridge('emit-event', e.detail);
+            let completion = e.detail.completion;
+            delete e.detail.completion
+            let ans = await this.nativeBridge('emit-event', e.detail);
+            completion(ans);
+            
         }, false)
         
         await this.setAccessToken();
@@ -133,7 +137,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.hostObject = { 
             pageKey: pageKey,
             pageParams: pageParams,
-            offline: true,
+            offline: false,
         };
         // const moduleName = 'PageBuilderModule';
         
@@ -160,8 +164,8 @@ export class AppComponent implements OnInit, OnDestroy {
             ElementName: `pages-element-${pageBuilderUUID}`,
         }; 
 
-        const publicBaseURL = `http://localhost:8088/files/Pages/Addon/Public/${pageBuilderUUID}/`;
-
+        // const publicBaseURL = `http://localhost:8088/files/Pages/Addon/Public/${pageBuilderUUID}/`; // offline pages
+        const publicBaseURL = "https://cdn.pepperi.com/Addon/Public/50062e0c-9967-4ed4-9102-f2bc50602d41/0.8.5/"; // online
         // this.addonService.setAddonStaticFolder(publicBaseURL);
         
         const pagesLoaderData: IBlockLoaderData = {
@@ -170,6 +174,7 @@ export class AppComponent implements OnInit, OnDestroy {
             relation: pagesRelation
         };
         this.remoteModuleOptions = this.remoteLoaderService.getRemoteLoaderOptions(pagesLoaderData)
+        console.log("remoteModuleOptions", JSON.stringify(this.remoteModuleOptions));
 
         // Old code removed in upgrade to NG14.
         // this.remoteModuleOptions = {

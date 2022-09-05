@@ -11,13 +11,12 @@ const webpackConfig = withModuleFederationPlugin({
         ...shareAll({ strictVersion: true, requiredVersion: 'auto' }),
     }
 });
-
 module.exports = {
     ...webpackConfig,
     output: {
         ...webpackConfig.output,
         uniqueName: filename,
-        publicPath: "http://localhost:4400/",
+        publicPath: "./",
     },
 };
 
