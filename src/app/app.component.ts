@@ -184,10 +184,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
     async handleEmitEvent(e: CustomEvent) {
             // finish client-action completion
-            let completion = e.detail.completion;
-            delete e.detail.completion
-            let ans = await this.nativeBridge('emit-event', e.detail);
-            console.log("ans from emit-event", ans);
+            const {
+                completion,
+                ...detail
+             } = e.detail;
+            let ans = await this.nativeBridge('emit-event', detail);
             const parsedAns = JSON.parse(ans);
             completion(parsedAns);
     }
