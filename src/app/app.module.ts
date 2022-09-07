@@ -4,7 +4,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { PepNgxLibModule } from '@pepperi-addons/ngx-lib';
-import { PepAddonLoaderModule } from '@pepperi-addons/ngx-remote-loader';
+import { PepRemoteLoaderModule } from '@pepperi-addons/ngx-lib/remote-loader';
+
 
 import { AppRoutingModule } from './app.routes';
 import { AppComponent } from './app.component';
@@ -19,7 +20,7 @@ import { AppComponent } from './app.component';
         HttpClientModule,
         AppRoutingModule,
         PepNgxLibModule,
-        PepAddonLoaderModule,
+        PepRemoteLoaderModule,
     ],
     providers: [],
     bootstrap: [AppComponent]

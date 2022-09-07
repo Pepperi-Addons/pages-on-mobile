@@ -1,8 +1,7 @@
-@import '~@pepperi-addons/ngx-lib/src/core/style/abstracts/mixins';
-@import '~@pepperi-addons/ngx-lib/src/core/style/abstracts/variables';
+@use '@pepperi-addons/ngx-lib/src/core/style/abstracts/variables';
 
 #loadingSpinnerModal {
-    z-index: $z-index-high + 101;
+    z-index: variables.$z-index-high + 101;
     height: 1rem;
     width: 100%;
     // position: fixed;
@@ -13,12 +12,12 @@
     overflow: hidden;
 
     &.no-top-bar {
-        top: $header-height !important;
+        top: variables.$header-height !important;
     }
 }
 
 #loadingSpinner {
-    z-index: $z-index-high;
+    z-index: variables.$z-index-high;
     width: 100%;
     margin-top: 5px;
 
