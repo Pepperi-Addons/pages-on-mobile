@@ -121,7 +121,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     async initPage() {
         window.addEventListener('emit-event', async (e: CustomEvent) => {
-            await this.nativeBridge('emit-event', e.detail);
+            await this.handleEmitEvent(e);
         }, false)
         
         await this.setAccessToken();
@@ -180,6 +180,17 @@ export class AppComponent implements OnInit, OnDestroy {
         //     exposedModule: `./${moduleName}`,
         //     componentName: 'PageBuilderComponent',
         // }
+    }
+
+    async handleEmitEvent(e: CustomEvent) {
+            // finish client-action completion
+            const {
+                completion,
+                ...detail
+             } = e.detail;
+            let ans = await this.nativeBridge('emit-event', detail);
+            const parsedAns = JSON.parse(ans);
+            completion(parsedAns);
     }
 
     ngOnInit() {
