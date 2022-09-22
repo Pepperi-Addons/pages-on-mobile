@@ -1,0 +1,7 @@
+@use '@pepperi-addons/ngx-lib/theming';
+// @use '@pepperi-addons/ngx-lib/src/core/style/abstracts/variables';
+
+// @import '~font-awesome/css/font-awesome.css';
+// @import '../styles/Fonts/nexa.css';
+
+@include theming.pepperi-theme();

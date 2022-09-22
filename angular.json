@@ -27,7 +27,7 @@
                             "src/favicon.ico",
                             "src/assets"
                         ],
-                        "styles": [],
+                        "styles": ["src/styles.scss"],
                         "scripts": [],
 						"commonChunk": false,
                         "extraWebpackConfig": "webpack.config.js"
