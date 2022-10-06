@@ -1,7 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PepHttpService, PepAddonService, PepCustomizationService, PepLoaderService } from '@pepperi-addons/ngx-lib';
-import { IBlockLoaderData, PepRemoteLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
-import { Relation } from '@pepperi-addons/papi-sdk';
+import { PepRemoteLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
+import { TestHelper } from './test-helper'
+import { AddonBlockService } from './addon-block-service'
+
 @Component({
     selector: 'addon-root',
     templateUrl: './app.component.html',
@@ -11,12 +13,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
     remoteModuleOptions: any;
     hostObject: any = {}
+    blockName: string
     params: any
     callbackMap: { [key: string]: (res: any) => void } = {}
     showLoader = false;
     loadingError: boolean = false;
     accessTokenTimeout: number = 0;
-
+    blockLoaderService: AddonBlockService
     onHostEventsCallback: (event: CustomEvent) => void;
 
     constructor(
@@ -24,8 +27,14 @@ export class AppComponent implements OnInit, OnDestroy {
         private addonService: PepAddonService,
         private customizationService: PepCustomizationService,
         private loaderService: PepLoaderService,
-        private remoteLoaderService: PepRemoteLoaderService
+        private remoteLoaderService: PepRemoteLoaderService,
+        private pepService: PepHttpService,
     ) {
+        this.blockLoaderService = new AddonBlockService();
+
+        // NOTE!!! FOR TESTING - uncomment the line bellow
+        // new TestHelper(pepService)
+
         this.loaderService.onChanged$.subscribe((show) => {
             this.showLoader = show;
         });
@@ -45,7 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     
     onHostEvents(event) {
-        // TODO:
+        this.nativeBridge('onHostEvents', event);
         // debugger;
     }
 
@@ -125,61 +134,14 @@ export class AppComponent implements OnInit, OnDestroy {
         }, false)
         
         await this.setAccessToken();
-        const pageKey = await this.nativeBridge('getPageKey');
-        const pageParams = JSON.parse(await this.nativeBridge('getPageParams'));
-        
         await this.setTheme();
-        
-        this.hostObject = { 
-            pageKey: pageKey,
-            pageParams: pageParams,
-            offline: false,
-        };
-        // const moduleName = 'PageBuilderModule';
-        
-        //offline
-        
-        // TODO: 
-        // const pagesRelation = Get the Addon block pages relation. (Name = 'Pages', RelationName = "AddonBlock")
-        const fileName =  'page_builder'; 
-        const name = 'Pages';
-        const blockName = 'PageBuilder';
-        const pageBuilderUUID = '50062e0c-9967-4ed4-9102-f2bc50602d41'; // TODO: Get the pages addon uuid from the relation.
-
-        const pagesRelation: Relation = {
-            RelationName: "AddonBlock",
-            Name: name,
-            Description: `${name} addon block`,
-            Type: "NgComponent",
-            SubType: "NG14",
-            AddonUUID: pageBuilderUUID,
-            AddonRelativeURL: fileName,
-            ComponentName: `${blockName}Component`,
-            ModuleName: `${blockName}Module`,
-            ElementsModule: 'WebComponents',
-            ElementName: `pages-element-${pageBuilderUUID}`,
-        }; 
-
-        // const publicBaseURL = `http://localhost:8088/files/Pages/Addon/Public/${pageBuilderUUID}/`; // offline pages
-        const publicBaseURL = "https://cdn.pepperi.com/Addon/Public/50062e0c-9967-4ed4-9102-f2bc50602d41/0.8.5/"; // online
-        // this.addonService.setAddonStaticFolder(publicBaseURL);
-        
-        const pagesLoaderData: IBlockLoaderData = {
-            addon: null,
-            addonPublicBaseURL: publicBaseURL,
-            relation: pagesRelation
-        };
-        this.remoteModuleOptions = this.remoteLoaderService.getRemoteLoaderOptions(pagesLoaderData)
+        this.hostObject = JSON.parse(await this.nativeBridge('getHostObject'));
+        this.blockName = await this.nativeBridge('getBlockName')
+        // const blockLoaderData = this.blockLoaderService.getBlockLoaderData('Pages');
+        const blockLoaderData = this.blockLoaderService.getBlockLoaderData(this.blockName);
+        this.remoteModuleOptions = this.remoteLoaderService.getRemoteLoaderOptions(blockLoaderData)
         console.log("remoteModuleOptions", JSON.stringify(this.remoteModuleOptions));
 
-        // Old code removed in upgrade to NG14.
-        // this.remoteModuleOptions = {
-        //     addonId: pageBuilderUUID,
-        //     remoteEntry: `${publicBaseURL}${fileName}.js`,
-        //     remoteName: fileName,
-        //     exposedModule: `./${moduleName}`,
-        //     componentName: 'PageBuilderComponent',
-        // }
     }
 
     async handleEmitEvent(e: CustomEvent) {
