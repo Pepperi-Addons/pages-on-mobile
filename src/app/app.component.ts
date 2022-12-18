@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PepHttpService, PepAddonService, PepCustomizationService, PepLoaderService } from '@pepperi-addons/ngx-lib';
-import { PepRemoteLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
+import { IBlockLoaderData, PepRemoteLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { TestHelper } from './test-helper'
 import { AddonBlockService } from './addon-block-service'
 
@@ -47,7 +47,8 @@ export class AppComponent implements OnInit, OnDestroy {
             const callbackKey = res.callbackKey;
             const callback = this.callbackMap[callbackKey]
             if (callback) {
-                callback(res.data);
+                const decodedData = this.decodeFromBase64(res.data);
+                callback(decodedData);
                 this.callbackMap[callbackKey] = undefined;
             }
         }
@@ -95,28 +96,60 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     async setAccessToken() {
+        let timeToUpdate = 500; // 500ms by default
         // cancel any exiting timeouts
         clearTimeout(this.accessTokenTimeout);
 
         // get the access token from the bridge
         const accessToken = await this.nativeBridge('getAccessToken');
 
-        window.sessionStorage.setItem('idp_token',accessToken)
-
-        // update accessToken when it expires 
-        const decodedJWT= await JSON.parse(atob(accessToken.split('.')[1]));
-        let timeToUpdate = (decodedJWT.exp * 1000) - Date.now()
-
-        this.accessTokenTimeout = setTimeout(async () => {
-            console.log('updating access token')
-            await this.setAccessToken();
-        }, timeToUpdate);
+        window.sessionStorage.setItem('idp_token', accessToken)
+        
+        try {
+            // update accessToken when it expires 
+            const decodedJWT= await JSON.parse(atob(accessToken.split('.')[1]));  
+            // check if the token is expired
+            if (decodedJWT.exp * 1000 < Date.now()) {
+                console.log('access token is expired');
+                timeToUpdate = 1000; // 1000ms
+            } else {
+                timeToUpdate = (decodedJWT.exp * 1000) - Date.now()
+            }
+            
+            this.accessTokenTimeout = setTimeout(async () => {
+                console.log('updating access token')
+                await this.setAccessToken();
+            }, timeToUpdate);
+        } catch (error) {
+            // it the app is offline, the token will be an empty string and can't be decoded
+            console.error('error in setAccessToken', error);
+            
+        }
     }
 
-    private async getTheme() {
+    private async getAddonBlockLoaderData(blockName: string): Promise<IBlockLoaderData> {
+        let res = {}        
+        console.log('getAddonBlockLoaderData - blockName', blockName);
+        const eventRes = await this.emitEvent('GetBlockLoaderData', {
+            BlockType: 'AddonBlock',
+            Name: blockName
+        });
+        console.log('getAddonBlockLoaderData', JSON.stringify(eventRes));
+        if (eventRes) {
+            res = eventRes;
+        }
+        return res as IBlockLoaderData;
+    }
+
+    private async getTheme() {        
         let res = { resultObject: undefined};
         try {
-            res = await this.httpService.getPapiApiCall(`/addons/api/95501678-6687-4fb3-92ab-1155f47f839e/themes/css_variables`).toPromise();    
+            console.log('getTheme');
+            const themeRes = await this.emitEvent('GetThemeCssVariables')
+            console.log('getTheme', themeRes);
+            if (themeRes) {
+                res.resultObject = themeRes;
+            }
         } catch (error) {
             console.error('getTheme error', error);
         }
@@ -137,8 +170,8 @@ export class AppComponent implements OnInit, OnDestroy {
         await this.setTheme();
         this.hostObject = JSON.parse(await this.nativeBridge('getHostObject'));
         this.blockName = await this.nativeBridge('getBlockName')
-        // const blockLoaderData = this.blockLoaderService.getBlockLoaderData('Pages');
-        const blockLoaderData = this.blockLoaderService.getBlockLoaderData(this.blockName);
+        // const blockLoaderData = this.blockLoaderService.getBlockLoaderData(this.blockName);
+        const blockLoaderData = await this.getAddonBlockLoaderData(this.blockName);
         this.remoteModuleOptions = this.remoteLoaderService.getRemoteLoaderOptions(blockLoaderData)
         console.log("remoteModuleOptions", JSON.stringify(this.remoteModuleOptions));
 
@@ -153,6 +186,20 @@ export class AppComponent implements OnInit, OnDestroy {
             let ans = await this.nativeBridge('emit-event', detail);
             const parsedAns = JSON.parse(ans);
             completion(parsedAns);
+    }
+
+    decodeFromBase64(str: string) {
+        // check if str is not empty and is a string
+        let res = str;
+        if (str && typeof str === 'string') { 
+            res =  atob(str);
+        }
+        return res;    
+    }
+
+    async emitEvent(event: string, data: any = {}) {
+        const ans = await this.nativeBridge('emit-event', { eventKey: event, eventData: data });
+        return JSON.parse(ans);
     }
 
     ngOnInit() {
