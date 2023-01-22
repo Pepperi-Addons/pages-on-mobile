@@ -34,7 +34,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.blockLoaderService = new AddonBlockService();
 
         // NOTE!!! FOR TESTING - uncomment the line bellow
-        new TestHelper(pepService)
+        // new TestHelper(pepService)
 
         this.loaderService.onChanged$.subscribe((show) => {
             this.showLoader = show;
@@ -92,11 +92,6 @@ export class AppComponent implements OnInit, OnDestroy {
             
             this.callbackMap[callbackKey] = (res) => {
                 resolve(res)
-            }
-
-            // if window is not defined wait for it 2 seconds to be defined
-            if (!window) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
             }
             (window as any).nativeBridge({
                 key: key,
@@ -173,7 +168,6 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     async initPage() {
-        debugger
         window.addEventListener('emit-event', async (e: CustomEvent) => {
             await this.handleEmitEvent(e);
         }, false)
