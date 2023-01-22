@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { PepHttpService, PepAddonService, PepCustomizationService, PepLoaderService } from '@pepperi-addons/ngx-lib';
 import { IBlockLoaderData, PepRemoteLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { TestHelper } from './test-helper'
@@ -23,6 +23,7 @@ export class AppComponent implements OnInit, OnDestroy {
     onHostEventsCallback: (event: CustomEvent) => void;
 
     constructor(
+        private renderer: Renderer2,
         private httpService: PepHttpService,
         private addonService: PepAddonService,
         private customizationService: PepCustomizationService,
@@ -33,7 +34,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.blockLoaderService = new AddonBlockService();
 
         // NOTE!!! FOR TESTING - uncomment the line bellow
-        // new TestHelper(pepService)
+        new TestHelper(pepService)
 
         this.loaderService.onChanged$.subscribe((show) => {
             this.showLoader = show;
@@ -64,7 +65,23 @@ export class AppComponent implements OnInit, OnDestroy {
         // debugger;
 
     }
+    addFontsToHeader() {
+        const element = this.renderer.createElement('link');
+        element.setAttribute('rel', 'stylesheet');
+        // element.setAttribute('href', 'https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;500;600;700;800&family=Crimson+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=David+Libre:wght@400;500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+        element.setAttribute('href', 'https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+        this.renderer.appendChild(document.head, element);
+    }
 
+    async test() {
+        
+        
+
+
+        /*@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;500;600;700;800&family=Crimson+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=David+Libre:wght@400;500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');*/
+        
+    }
     async checkOnline() {
         try {
             this.loaderService.show();
@@ -80,13 +97,17 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     nativeBridge(key: string, data: any = undefined): Promise<any> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const callbackKey = Date.now();
             
             this.callbackMap[callbackKey] = (res) => {
                 resolve(res)
             }
 
+            // if window is not defined wait for it 2 seconds to be defined
+            if (!window) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
             (window as any).nativeBridge({
                 key: key,
                 data: data,
@@ -162,6 +183,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     async initPage() {
+        debugger
         window.addEventListener('emit-event', async (e: CustomEvent) => {
             await this.handleEmitEvent(e);
         }, false)
@@ -187,12 +209,22 @@ export class AppComponent implements OnInit, OnDestroy {
             const parsedAns = JSON.parse(ans);
             completion(parsedAns);
     }
-
+    // this function decodes the utf-8 characters in addition to the base64 decoding
     decodeFromBase64(str: string) {
         // check if str is not empty and is a string
         let res = str;
-        if (str && typeof str === 'string') { 
-            res =  atob(str);
+        try {
+            if (str && typeof str === 'string') { 
+                // base64 decoding
+                const tmp = atob(str);
+                // set before utf-8 decoding, in case of error
+                res = tmp;
+                // utf-8 decoding
+                const decoder = new TextDecoder('utf-8');
+                res =  decoder.decode(new Uint8Array(tmp.split('').map(c => c.charCodeAt(0))));
+            }            
+        } catch (error) {
+            console.error('error in decodeFromBase64', error);
         }
         return res;    
     }
@@ -203,6 +235,11 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        try {
+            this.addFontsToHeader();            
+        } catch (error) {
+            console.error('error in addFontsToHeader', error);
+        }
         this.checkOnline();
     }
 
