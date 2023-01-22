@@ -1,7 +1,5 @@
-@use '@pepperi-addons/ngx-lib/theming';
-// @use '@pepperi-addons/ngx-lib/src/core/style/abstracts/variables';
+// @use '@pepperi-addons/ngx-lib/theming'; // supports online theme and fonts
 
-// @import '~font-awesome/css/font-awesome.css';
-// @import '../styles/Fonts/nexa.css';
+@use '@pepperi-addons/ngx-lib/theming-offline' as theming; // onilne fonts are not supported
 
 @include theming.pepperi-theme();

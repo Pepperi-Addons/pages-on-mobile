@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { PepHttpService, PepAddonService, PepCustomizationService, PepLoaderService } from '@pepperi-addons/ngx-lib';
 import { IBlockLoaderData, PepRemoteLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { TestHelper } from './test-helper'
@@ -23,6 +23,7 @@ export class AppComponent implements OnInit, OnDestroy {
     onHostEventsCallback: (event: CustomEvent) => void;
 
     constructor(
+        private renderer: Renderer2,
         private httpService: PepHttpService,
         private addonService: PepAddonService,
         private customizationService: PepCustomizationService,
@@ -64,6 +65,12 @@ export class AppComponent implements OnInit, OnDestroy {
         // debugger;
 
     }
+    addFontsToHeader() {
+        const element = this.renderer.createElement('link');
+        element.setAttribute('rel', 'stylesheet');
+        element.setAttribute('href', 'https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+        this.renderer.appendChild(document.head, element);
+    }
 
     async checkOnline() {
         try {
@@ -80,13 +87,12 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     nativeBridge(key: string, data: any = undefined): Promise<any> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const callbackKey = Date.now();
             
             this.callbackMap[callbackKey] = (res) => {
                 resolve(res)
             }
-
             (window as any).nativeBridge({
                 key: key,
                 data: data,
@@ -187,12 +193,22 @@ export class AppComponent implements OnInit, OnDestroy {
             const parsedAns = JSON.parse(ans);
             completion(parsedAns);
     }
-
+    // this function decodes the utf-8 characters in addition to the base64 decoding
     decodeFromBase64(str: string) {
         // check if str is not empty and is a string
         let res = str;
-        if (str && typeof str === 'string') { 
-            res =  atob(str);
+        try {
+            if (str && typeof str === 'string') { 
+                // base64 decoding
+                const tmp = atob(str);
+                // set before utf-8 decoding, in case of error
+                res = tmp;
+                // utf-8 decoding
+                const decoder = new TextDecoder('utf-8');
+                res =  decoder.decode(new Uint8Array(tmp.split('').map(c => c.charCodeAt(0))));
+            }            
+        } catch (error) {
+            console.error('error in decodeFromBase64', error);
         }
         return res;    
     }
@@ -203,6 +219,11 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        try {
+            this.addFontsToHeader();            
+        } catch (error) {
+            console.error('error in addFontsToHeader', error);
+        }
         this.checkOnline();
     }
 
