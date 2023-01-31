@@ -93,6 +93,13 @@ export class AppComponent implements OnInit, OnDestroy {
             this.callbackMap[callbackKey] = (res) => {
                 resolve(res)
             }
+
+            let timout = 0;
+            while (!window["nativeBridge"] && timout < 2000) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                timout += 100;
+            }
+                
             (window as any).nativeBridge({
                 key: key,
                 data: data,
