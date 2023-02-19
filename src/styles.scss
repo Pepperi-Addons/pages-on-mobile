@@ -3,3 +3,17 @@
 @use '@pepperi-addons/ngx-lib/theming-offline' as theming; // onilne fonts are not supported
 
 @include theming.pepperi-theme();
+html {
+    height: 100vh;
+    body {
+        height: inherit;
+        addon-root {
+            height: inherit;
+            display: block;
+            #addon-container {
+                height: 100%;
+                display: block;
+            }
+        }
+    }
+}
