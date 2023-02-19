@@ -1,11 +1,11 @@
-<div>
+<div id="addon-container">
     <div id="loadingSpinnerModal" [hidden]="!showLoader" pepRtlClass>
         <div id="loadingSpinner">
             <div class="pep-loading-spinner" *ngFor="let number of [0, 1, 2, 3, 4]"
                 [ngStyle]="{ 'background-color': customizationService?.getLoadingSpinnerColor() }"></div>
         </div>
     </div>
-    <div *ngIf="!loadingError">
+    <ng-container *ngIf="!loadingError">
         <!-- <pep-remote-loader [options]="remoteModuleOptions" [hostObject]="hostObject" ></pep-remote-loader> -->
 
         <pep-remote-loader-element *ngIf="remoteModuleOptions"
@@ -14,8 +14,8 @@
             [events]="{ hostEvents: onHostEventsCallback }"
             (load)="onElementLoad($event)">
         </pep-remote-loader-element>
-    </div>
-    <div *ngIf="loadingError">
+    </ng-container>
+    <ng-container *ngIf="loadingError">
         <div class="content-unavailable-container" >
             <div class="content-unavailable" (click)="checkOnline()">
                 <img src="assets/alert.svg" alt="Alert icon" />
@@ -23,6 +23,6 @@
                 <h2>Tap to Reload</h2>
             </div>
         </div>
-    </div>
+    </ng-container>
 </div>
 <pep-size-detector></pep-size-detector>
