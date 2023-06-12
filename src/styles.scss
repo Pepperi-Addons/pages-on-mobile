@@ -5,3 +5,12 @@
 // @import '../styles/Fonts/nexa.css';
 
 @include theming.pepperi-theme();
+
+
+body {
+	height:100%
+}
+addon-root {
+	height: inherit;
+	display: block;
+}
